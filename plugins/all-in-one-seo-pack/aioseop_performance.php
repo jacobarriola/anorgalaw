@@ -15,26 +15,33 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 			$this->prefix = 'aiosp_performance_';						// option prefix
 			$this->file = __FILE__;									// the current file
 			parent::__construct();
+			
+			$this->help_text = Array(
+				"memory_limit"		=> __( "This setting allows you to raise your PHP memory limit to a reasonable value. Note: WordPress core and other WordPress plugins may also change the value of the memory limit.", 'all_in_one_seo_pack' ),
+				"execution_time"	=> __( "This setting allows you to raise your PHP execution time to a reasonable value.", 'all_in_one_seo_pack' ),
+				"force_rewrites"	=> __( "Use output buffering to ensure that the title gets rewritten. Enable this option if you run into issues with the title tag being set by your theme or another plugin.", 'all_in_one_seo_pack' )
+			);
+						
 			$this->default_options = array(
 					'memory_limit'		=> Array(	'name'	  => __( 'Raise memory limit',  'all_in_one_seo_pack' ),
-													'help_text' => __( 'Allows you to raise your PHP memory limit to a reasonable value. Note: WordPress core and other WordPress plugins may also change the value of the memory limit.', 'all_in_one_seo_pack' ),
-				 						  			'default'	  => '256M',
-										  			'type' => 'select',
+				 						  			'default'	  => '256M', 'type' => 'select',
 										  			'initial_options' => Array( 0 => __( "Use the system default", 'all_in_one_seo_pack' ), '32M' => '32MB', '64M' => '64MB', '128M' => '128MB', '256M' => '256MB' ) ),
 					'execution_time'	=> Array(	'name'	  => __( 'Raise execution time',  'all_in_one_seo_pack' ),
-										  			'help_text' => __( 'Allows you to raise your PHP execution time to a reasonable value.', 'all_in_one_seo_pack' ),
-				 						  			'default'	  => '',
-										  			'type' => 'select',
+				 						  			'default'	  => '', 'type' => 'select',
 										  			'initial_options' => Array( '' => __( "Use the system default", 'all_in_one_seo_pack' ), 30 => '30s', 60 => '1m', 120 => '2m', 300 => '5m', 0 => __( 'No limit', 'all_in_one_seo_pack' ) ) )
 				 );
+
+			$this->help_anchors = Array(
+				'memory_limit'   => '#raise-memory-limit',
+				'execution_time' => '#raise-execution-time',
+				'force_rewrites' => '#force-rewrites'
+			);
 			
 			global $aiosp, $aioseop_options;
 			if ( aioseop_option_isset( 'aiosp_rewrite_titles' ) && $aioseop_options['aiosp_rewrite_titles'] ) {
 				$this->default_options['force_rewrites']	= Array(
 								'name' => __( 'Force Rewrites:', 'all_in_one_seo_pack' ), 
-								'help_text' => __( "Use output buffering to ensure that the title gets rewritten.", 'all_in_one_seo_pack' ),
-								'default' => 1,
-								'type' => 'radio',
+								'default' => 1, 'type' => 'radio',
 								'initial_options' => Array( 1 => __( 'Enabled', 'all_in_one_seo_pack' ),
 															0 => __( 'Disabled', 'all_in_one_seo_pack' ) )
 								);
@@ -43,6 +50,7 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 			$this->layout = Array(
 				'default' => Array(
 						'name' => $this->name,
+						'help_link' => 'http://semperplugins.com/documentation/performance-settings/',
 						'options' => array_keys( $this->default_options )
 					)
 			);
@@ -53,10 +61,13 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 			
 			$this->layout['system_status'] = Array(
 					'name' => __( 'System Status', 'all_in_one_seo_pack' ),
+					'help_link' => 'http://semperplugins.com/documentation/performance-settings/',
 					'options' => array_keys( $system_status )
 				);
 				
 			$this->default_options = array_merge( $this->default_options, $system_status );
+			
+			$this->add_help_text_links();
 			
 			add_filter( $this->prefix . 'display_options', Array( $this, 'display_options_filter' ), 10, 2 );
 			add_filter( $this->prefix . 'update_options', Array( $this, 'update_options_filter' ), 10, 2 );
@@ -111,7 +122,7 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 		}
 		
 		function settings_page_init() {
-			$this->default_options['status']['default'] = $this->get_serverinfo();			
+			$this->default_options['status']['default'] = $this->get_serverinfo();
 		}
 		
 		function menu_order() {
@@ -140,7 +151,7 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 		        else $memory_limit = __('N/A', 'all_in_one_seo_pack' );
 		        if (function_exists('memory_get_usage')) $memory_usage = round(memory_get_usage() / 1024 / 1024, 2) . __(' MByte', 'all_in_one_seo_pack' );
 		        else $memory_usage = __('N/A', 'all_in_one_seo_pack' );
-		        if (is_callable('exif_read_data')) $exif = __('Yes', 'all_in_one_seo_pack' ). " ( V" . substr(phpversion('exif'),0,4) . ")" ;
+		        if (is_callable('exif_read_data')) $exif = __('Yes', 'all_in_one_seo_pack' ). " ( V" . $this->substr(phpversion('exif'),0,4) . ")" ;
 		        else $exif = __('No', 'all_in_one_seo_pack' );
 		        if (is_callable('iptcparse')) $iptc = __('Yes', 'all_in_one_seo_pack' );
 		        else $iptc = __('No', 'all_in_one_seo_pack' );
@@ -222,11 +233,13 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Performance' ) ) {
 					echo "<div class='sfwd_debug_error'>" . __( "Form submission error: verification check failed.", 'all_in_one_seo_pack' ) . "</div>";
 					break;
 				}
-				if ($_REQUEST['sfwd_debug_send_email']) {
-					if (wp_mail($_REQUEST['sfwd_debug_send_email'], sprintf( __( "SFWD Debug Mail From Site %s.", 'all_in_one_seo_pack'), $siteurl), $mail_text ) ) {
-						echo "<div class='sfwd_debug_mail_sent'>" . sprintf( __( "Sent to %s.", 'all_in_one_seo_pack' ), $_REQUEST['sfwd_debug_send_email'] ) . "</div>";
+				$email = '';
+				if ( !empty( $_REQUEST['sfwd_debug_send_email'] ) ) $email = sanitize_email( $_REQUEST['sfwd_debug_send_email'] );
+				if ( $email ) {
+					if ( wp_mail( $email, sprintf( __( "SFWD Debug Mail From Site %s.", 'all_in_one_seo_pack'), $siteurl), $mail_text ) ) {
+						echo "<div class='sfwd_debug_mail_sent'>" . sprintf( __( "Sent to %s.", 'all_in_one_seo_pack' ), $email ) . "</div>";
 					} else {
-						echo "<div class='sfwd_debug_error'>" . sprintf( __( "Failed to send to %s.", 'all_in_one_seo_pack' ),  $_REQUEST['sfwd_debug_send_email'] ) . "</div>";
+						echo "<div class='sfwd_debug_error'>" . sprintf( __( "Failed to send to %s.", 'all_in_one_seo_pack' ),  $email ) . "</div>";
 					}
 				} else {
 					echo "<div class='sfwd_debug_error'>" . __( 'Error: please enter an e-mail address before submitting.', 'all_in_one_seo_pack' ) . "</div>";

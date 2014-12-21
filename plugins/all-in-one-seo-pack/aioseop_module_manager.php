@@ -36,8 +36,19 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Module_Manager' ) ) {
 			if ( $class == get_class( $aiosp ) )	return $aiosp;
 			if ( $class == get_class( $this ) )		return $this;
 			foreach( $this->modules as $m )
-				if ( $class == get_class( $m ) )	return $m;
+				if ( is_object( $m ) && ( $class == get_class( $m ) ) )
+					return $m;
 			return false;
+		}
+		
+		function get_loaded_module_list() {
+			$module_list = Array();
+			if ( !empty( $this->modules ) ) {
+				foreach( $this->modules as $k => $v )
+					if ( !empty( $v ) )
+						$module_list[$k] = get_class( $v );
+			}
+			return $module_list;
 		}
 
 		// Module name is used for these automatic settings:
@@ -72,6 +83,12 @@ if ( !class_exists( 'All_in_One_SEO_Pack_Module_Manager' ) ) {
 			if ( !is_array( $this->modules ) ) return false;
 			$v = $this->modules[ $mod ];
 			if ( $v !== null ) return false;	// already loaded
+			if ( $mod == 'performance' && !is_super_admin() ) return false;
+			if ( ( $mod == 'file_editor' || $mod == 'robots' )
+										 && ( ( ( defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT ) 
+										 || ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS )
+										 || !is_super_admin() ) ) )
+				return false;
 			$mod_enable = false;
 			$fm_page = ( $this->module_settings_update && wp_verify_nonce( $_POST['nonce-aioseop'], 'aioseop-nonce' ) && 
 				 		 isset($_REQUEST['page']) && $_REQUEST['page'] == trailingslashit( AIOSEOP_PLUGIN_DIRNAME ) . 'aioseop_feature_manager.php' );
