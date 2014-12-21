@@ -7,3 +7,14 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# npm and bower modules #
+#########################
+themes/Law/node_modules/
+themes/Law/bower_components/
+
+# Remove SASS cache files #
+themes/Law/.sass-cache/*
+
+# No need to add the upgrade folder to the repo #
+upgrade/*
